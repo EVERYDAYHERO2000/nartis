@@ -13,7 +13,7 @@ Wi-Fi настраивается через точку доступа, а сер
 - Опрос по расписанию (5, 10 или 30 минут): мощность, напряжения и токи по фазам, энергия суммарно и по тарифам, частота сети.
 - Первая настройка через точку доступа `nartis-setup` с captive-portal.
 - Если сохранённая Wi-Fi сеть недоступна, точка доступа для настройки поднимается снова.
-- REST API для интеграций.
+- REST API для интеграций и готовая интеграция для Home Assistant.
 
 ## Совместимость
 
@@ -154,7 +154,38 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor
 
 ## Интеграция с Home Assistant
 
-В `configuration.yaml`, с IP-адресом вашего устройства:
+В репозитории есть пользовательская интеграция [`custom_components/nartis`](custom_components/nartis). Она добавляет устройство «Нартис» со всеми сенсорами, настраивается через интерфейс Home Assistant и опрашивает локальный API устройства без облака и MQTT. Проверена на Home Assistant 2026.10.
+
+### Установка
+
+**Через HACS:** HACS → меню ⋮ → «Пользовательские репозитории» → адрес `https://github.com/EVERYDAYHERO2000/nartis`, категория «Интеграция» → установить **Nartis RF Meter** → перезапустить Home Assistant.
+
+**Вручную:** скопируйте папку `custom_components/nartis` в `config/custom_components/` вашего Home Assistant и перезапустите его.
+
+### Подключение
+
+**Настройки → Устройства и службы → Добавить интеграцию → Nartis RF Meter**, затем введите IP-адрес устройства. Интеграция проверит связь и создаст устройство «Нартис <серийный номер>».
+
+### Сенсоры
+
+| Сенсор | Единица | Класс |
+|---|---|---|
+| Мощность | W | power |
+| Напряжение L1 / L2 / L3 | V | voltage |
+| Ток L1 / L2 / L3 | A | current |
+| Энергия, Энергия тариф 1 / тариф 2 | kWh | energy, `total_increasing` |
+| Частота | Hz | frequency |
+| Сопряжение со счётчиком (диагностика) | вкл/выкл | connectivity |
+| Последнее чтение (диагностика) | дата/время | timestamp |
+| Сигнал Wi-Fi (диагностика, по умолчанию выключен) | dBm | signal_strength |
+
+Сенсоры энергии можно сразу добавить в панель «Энергия». Если в прошивке изменить набор OBIS-кодов, незнакомые интеграции значения появятся как отдельные сенсоры с названием и единицей из прошивки.
+
+В параметрах интеграции задаётся, как часто Home Assistant опрашивает устройство (по умолчанию 60 секунд). Сам счётчик устройство читает с интервалом из своего веб-интерфейса, поэтому новые значения появляются с этой периодичностью.
+
+### Без интеграции: REST-сенсоры в YAML
+
+Если пользовательскую интеграцию ставить не хочется, те же данные можно получить штатными REST-сенсорами. Добавьте в `configuration.yaml`, указав IP-адрес вашего устройства:
 
 ```yaml
 rest:
@@ -169,14 +200,6 @@ rest:
         device_class: power
         state_class: measurement
 
-      - name: "Нартис напряжение L1"
-        unique_id: nartis_voltage_l1
-        value_template: "{{ (value_json['values'] | selectattr('obis', 'eq', '1.0.32.7.0.255') | first)['value'] }}"
-        availability: "{{ (value_json['values'] | selectattr('obis', 'eq', '1.0.32.7.0.255') | first)['value'] is not none }}"
-        unit_of_measurement: V
-        device_class: voltage
-        state_class: measurement
-
       - name: "Нартис энергия тариф 1"
         unique_id: nartis_energy_t1
         value_template: "{{ (value_json['values'] | selectattr('obis', 'eq', '1.0.1.8.1.255') | first)['value'] }}"
@@ -184,19 +207,9 @@ rest:
         unit_of_measurement: kWh
         device_class: energy
         state_class: total_increasing
-
-      - name: "Нартис энергия тариф 2"
-        unique_id: nartis_energy_t2
-        value_template: "{{ (value_json['values'] | selectattr('obis', 'eq', '1.0.1.8.2.255') | first)['value'] }}"
-        availability: "{{ (value_json['values'] | selectattr('obis', 'eq', '1.0.1.8.2.255') | first)['value'] is not none }}"
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
 ```
 
-Остальные величины подключаются так же, нужен только OBIS-код из таблицы выше. Сенсоры энергии с `state_class: total_increasing` можно сразу добавить в панель «Энергия» Home Assistant.
-
-Счётчик опрашивается раз в интервал из настроек (по умолчанию 10 минут), поэтому `scan_interval` меньше минуты не имеет смысла.
+Остальные величины подключаются так же, по OBIS-коду из таблицы выше.
 
 ## Особенности
 
@@ -221,6 +234,8 @@ firmware/                    проект ESP-IDF
   partitions.csv
   sdkconfig.defaults
 web/                         веб-интерфейс (встраивается в прошивку)
+custom_components/nartis/    интеграция для Home Assistant
+hacs.json                    описание для установки через HACS
 ```
 
 ## Использованные проекты

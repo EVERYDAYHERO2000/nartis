@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Счётчик Нартис",
+        "description": "Введите IP-адрес или имя хоста устройства Нартис на ESP32.",
+        "data": {
+          "host": "Адрес"
+        },
+        "data_description": {
+          "host": "Например, 192.168.0.50"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к устройству.",
+      "not_nartis": "Устройство отвечает не как Нартис RF."
+    },
+    "abort": {
+      "already_configured": "Это устройство уже добавлено."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Опрос",
+        "data": {
+          "scan_interval": "Интервал опроса, секунд"
+        },
+        "data_description": {
+          "scan_interval": "Как часто Home Assistant запрашивает устройство. Сам счётчик устройство опрашивает с интервалом из своего веб-интерфейса."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Мощность"
+      },
+      "voltage_l1": {
+        "name": "Напряжение L1"
+      },
+      "voltage_l2": {
+        "name": "Напряжение L2"
+      },
+      "voltage_l3": {
+        "name": "Напряжение L3"
+      },
+      "current_l1": {
+        "name": "Ток L1"
+      },
+      "current_l2": {
+        "name": "Ток L2"
+      },
+      "current_l3": {
+        "name": "Ток L3"
+      },
+      "energy_total": {
+        "name": "Энергия"
+      },
+      "energy_t1": {
+        "name": "Энергия тариф 1"
+      },
+      "energy_t2": {
+        "name": "Энергия тариф 2"
+      },
+      "frequency": {
+        "name": "Частота"
+      },
+      "last_reading": {
+        "name": "Последнее чтение"
+      },
+      "wifi_rssi": {
+        "name": "Сигнал Wi-Fi"
+      }
+    },
+    "binary_sensor": {
+      "paired": {
+        "name": "Сопряжение со счётчиком"
+      }
+    }
+  }
+}

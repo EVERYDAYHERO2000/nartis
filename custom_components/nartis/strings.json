@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nartis RF Meter",
+        "description": "Enter the IP address or host name of the Nartis ESP32 device.",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "For example 192.168.0.50"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the device.",
+      "not_nartis": "The device did not respond like a Nartis RF Meter."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling",
+        "data": {
+          "scan_interval": "Polling interval, seconds"
+        },
+        "data_description": {
+          "scan_interval": "How often Home Assistant asks the device. The device itself reads the meter at the interval set in its web interface."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "energy_total": {
+        "name": "Energy"
+      },
+      "energy_t1": {
+        "name": "Energy tariff 1"
+      },
+      "energy_t2": {
+        "name": "Energy tariff 2"
+      },
+      "frequency": {
+        "name": "Frequency"
+      },
+      "last_reading": {
+        "name": "Last reading"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      }
+    },
+    "binary_sensor": {
+      "paired": {
+        "name": "Paired with meter"
+      }
+    }
+  }
+}
