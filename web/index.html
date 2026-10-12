@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Нартис</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav>
+    <span id="dev" class="dev">nartis</span>
+    <span class="spacer"></span>
+    <span id="dot" class="dot"></span>
+    <button data-view="readings" class="tab active">Показания</button>
+    <button data-view="settings" class="tab">Настройки</button>
+  </nav>
+
+  <main>
+    <section id="readings" class="view active">
+      <div id="meta" class="meta"></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="settings" class="view">
+      <form id="wifiForm" class="card">
+        <div class="field">
+          <select id="ssid"></select>
+          <button type="button" id="rescan" class="icon" title="Обновить">↻</button>
+        </div>
+        <input id="pass" type="password" placeholder="Пароль Wi-Fi" autocomplete="off" />
+        <button type="submit" class="primary">Подключить</button>
+        <div id="wifiMsg" class="msg"></div>
+      </form>
+
+      <form id="cfgForm" class="card">
+        <input id="serial" inputmode="numeric" maxlength="12" placeholder="Серийный номер счётчика" />
+        <select id="channel">
+          <option value="auto">Канал: авто</option>
+          <option value="0">CH0 · 433.82</option>
+          <option value="1">CH1 · 433.30</option>
+          <option value="2">CH2 · 434.26</option>
+          <option value="3">CH3 · 434.70</option>
+        </select>
+        <select id="interval">
+          <option value="300">Опрос: 5 мин</option>
+          <option value="600">Опрос: 10 мин</option>
+          <option value="1800">Опрос: 30 мин</option>
+        </select>
+        <button type="submit" class="primary">Сохранить</button>
+        <div id="cfgMsg" class="msg"></div>
+      </form>
+
+      <div class="card api">
+        <div class="row"><span>API</span><code id="apiUrl">/api/readings</code></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

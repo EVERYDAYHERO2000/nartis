@@ -1,0 +1,2 @@
+59b2feb1767439dafa198548ebee97541ef482fc Thu Oct 1 12:49:14 2026 +0300
+FerrumLogic/esphome-nartis-rf-meter-cc1101
