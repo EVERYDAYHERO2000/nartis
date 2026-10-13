@@ -55,6 +55,9 @@ struct SensorEntry {
   uint16_t class_id{3};   // Default: Register
   uint8_t attr_id{2};     // Default: value
   DlmsValue last_value{};
+  // Firmware port: DLMS type this attribute answered with last time (0 = not
+  // learned yet). Used to reject a response that belongs to another batch.
+  uint8_t expected_dtype{0};
 };
 
 class NartisRfMeterComponent : public esphome::PollingComponent {
@@ -67,6 +70,10 @@ class NartisRfMeterComponent : public esphome::PollingComponent {
   void loop() override;
   float get_setup_priority() const override { return esphome::setup_priority::DATA; }
   bool is_paired() const { return paired_; }  // firmware port: exposed for the web UI
+  // Firmware port: seed the DLMS type expected for the sensor registered at `index`.
+  void set_sensor_expected_dtype(size_t index, uint8_t dtype) {
+    if (index < sensors_.size()) sensors_[index].expected_dtype = dtype;
+  }
 
   void set_pin_sdio(int p) { pin_sdio_ = p; }
   void set_pin_sclk(int p) { pin_sclk_ = p; }

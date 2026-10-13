@@ -29,19 +29,21 @@ static constexpr int PIN_GDO0 = 3;   // component name: pin_gpio3
 
 // The meter sends no scaler/unit, so raw values are scaled here
 // (factors from the upstream component's reference configuration).
-struct Def { const char* label; const char* obis; const char* unit; float mult; int decimals; };
+// dtype: DLMS type the meter answers with (0x05 int32, 0x06 uint32, 0x12 uint16).
+// Used to reject a reply that belongs to another batch (see nartis_rf_meter.cpp).
+struct Def { const char* label; const char* obis; const char* unit; float mult; int decimals; uint8_t dtype; };
 static const Def DEFS[] = {
-    {"Мощность",       "1.0.1.7.0.255",  "Вт",    1.0f,   0},
-    {"Напряжение L1",  "1.0.32.7.0.255", "В",     0.1f,   1},
-    {"Напряжение L2",  "1.0.52.7.0.255", "В",     0.1f,   1},
-    {"Напряжение L3",  "1.0.72.7.0.255", "В",     0.1f,   1},
-    {"Ток L1",         "1.0.31.7.0.255", "А",     0.001f, 2},
-    {"Ток L2",         "1.0.51.7.0.255", "А",     0.001f, 2},
-    {"Ток L3",         "1.0.71.7.0.255", "А",     0.001f, 2},
-    {"Энергия",        "1.0.1.8.0.255",  "кВт·ч", 0.001f, 1},   // meter reports Wh
-    {"Тариф 1",        "1.0.1.8.1.255",  "кВт·ч", 0.001f, 1},
-    {"Тариф 2",        "1.0.1.8.2.255",  "кВт·ч", 0.001f, 1},
-    {"Частота",        "1.0.14.7.0.255", "Гц",    0.01f,  2},
+    {"Мощность",       "1.0.1.7.0.255",  "Вт",    1.0f,   0, 0x05},
+    {"Напряжение L1",  "1.0.32.7.0.255", "В",     0.1f,   1, 0x12},
+    {"Напряжение L2",  "1.0.52.7.0.255", "В",     0.1f,   1, 0x12},
+    {"Напряжение L3",  "1.0.72.7.0.255", "В",     0.1f,   1, 0x12},
+    {"Ток L1",         "1.0.31.7.0.255", "А",     0.001f, 2, 0x06},
+    {"Ток L2",         "1.0.51.7.0.255", "А",     0.001f, 2, 0x06},
+    {"Ток L3",         "1.0.71.7.0.255", "А",     0.001f, 2, 0x06},
+    {"Энергия",        "1.0.1.8.0.255",  "кВт·ч", 0.001f, 1, 0x06},   // meter reports Wh
+    {"Тариф 1",        "1.0.1.8.1.255",  "кВт·ч", 0.001f, 1, 0x06},
+    {"Тариф 2",        "1.0.1.8.2.255",  "кВт·ч", 0.001f, 1, 0x06},
+    {"Частота",        "1.0.14.7.0.255", "Гц",    0.01f,  2, 0x12},
 };
 static constexpr int NDEFS = sizeof(DEFS) / sizeof(DEFS[0]);
 
@@ -105,6 +107,7 @@ static void meter_task(void* arg) {
   c->set_update_interval(interval_ms);
   for (int i = 0; i < NDEFS; i++) {
     c->register_sensor(new ValueSensor(i, DEFS[i].mult), parse_obis(DEFS[i].obis), 3, 2);
+    c->set_sensor_expected_dtype(i, DEFS[i].dtype);
   }
 
   ESP_LOGI(TAG, "starting radio, meter %s, channel %s, interval %lus",

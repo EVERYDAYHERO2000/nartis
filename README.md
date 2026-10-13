@@ -217,6 +217,7 @@ rest:
 - Энергию счётчик передаёт в Вт·ч, прошивка пересчитывает её в кВт·ч.
 - Один цикл чтения занимает около 30 секунд. Показания хранятся в памяти, поэтому после перезагрузки они появляются со следующим циклом (через ~40 секунд после старта).
 - После смены серийного номера, канала или интервала устройство перезагружается.
+- Показания читаются пачками по 5 значений, а ответ счётчика не содержит OBIS-кодов. Иногда счётчик повторно присылает ответ на предыдущую пачку, и без защиты, например, напряжения попали бы в сенсоры энергии и тарифов. Поэтому прошивка сверяет тип каждого значения с ожидаемым (поле `dtype` в таблице `DEFS`) и отбрасывает чужие ответы.
 
 ## Структура репозитория
 
@@ -241,7 +242,7 @@ hacs.json                    описание для установки чере
 ## Использованные проекты
 
 - **[latonita/esphome-nartis-rf-meter](https://github.com/latonita/esphome-nartis-rf-meter)** (MIT, Anton Viktorov): исходная реализация протокола счётчиков Нартис RF433. Это сопряжение, кадры, CRC, AES-128-GCM и DLMS/COSEM, оригинально для радиомодуля CMT2300A.
-- **[FerrumLogic/esphome-nartis-rf-meter-cc1101](https://github.com/FerrumLogic/esphome-nartis-rf-meter-cc1101)**: порт этого компонента на радиомодуль CC1101. Его код перенесён в [`firmware/components/nartis_rf/src`](firmware/components/nartis_rf/src) почти без изменений (версия указана в `UPSTREAM.txt`). Добавлены только прослойка вместо ESPHome и один метод `is_paired()`.
+- **[FerrumLogic/esphome-nartis-rf-meter-cc1101](https://github.com/FerrumLogic/esphome-nartis-rf-meter-cc1101)**: порт этого компонента на радиомодуль CC1101. Его код перенесён в [`firmware/components/nartis_rf/src`](firmware/components/nartis_rf/src) почти без изменений (версия указана в `UPSTREAM.txt`). Добавлены только прослойка вместо ESPHome, метод `is_paired()` и проверка типов значений в ответах счётчика. Последняя не даёт записать ответ одной пачки показаний в сенсоры другой (подробнее в разделе «Особенности»).
 - **Драйвер CC1101 на базе библиотеки panStamp** (panStamp, Tyler Sommer, Daniel Berenguer; LGPL-3.0) в составе компонента FerrumLogic: [`cc1101_vendored.c`](firmware/components/nartis_rf/src/cc1101_vendored.c).
 - **[ESP-IDF](https://github.com/espressif/esp-idf)** (Espressif, Apache-2.0).
 - **[latonita/esphome-nartis-rf-2-meter](https://github.com/latonita/esphome-nartis-rf-2-meter)**: решение для счётчиков с RF433-2 / Д101-2, которые этот проект не поддерживает.

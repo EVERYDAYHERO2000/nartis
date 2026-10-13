@@ -1351,12 +1351,27 @@ bool NartisRfMeterComponent::handle_get_response_() {
                     "ignoring mismatched/stale response", got_count, batch_count_);
       return false;
     }
+    // Firmware port guard: the meter sometimes re-hands the PREVIOUS batch's
+    // response with a fresh nested counter, which passes the replay and count
+    // guards when both batches have the same size, and would store e.g. the
+    // voltages into the energy/tariff sensors. The response carries no OBIS
+    // echo, so verify it by shape: each attribute must come back with the same
+    // DLMS type as last time. A mismatch rejects the frame (the batch re-sends).
+    for (uint8_t i = 0; i < got_count && (batch_start_idx_ + i) < sensors_.size(); i++) {
+      const SensorEntry &se = sensors_[batch_start_idx_ + i];
+      if (values[i].has_value() && se.expected_dtype != 0 && values[i].dtype != se.expected_dtype) {
+        ESP_LOGW(TAG, "GET response: slot %u type 0x%02X != expected 0x%02X - response belongs to "
+                      "another batch, ignoring", i, values[i].dtype, se.expected_dtype);
+        return false;
+      }
+    }
     // Store each result into the corresponding user-sensor slot.
     for (uint8_t i = 0; i < got_count && (batch_start_idx_ + i) < sensors_.size(); i++) {
       const uint8_t idx = batch_start_idx_ + i;
       const uint8_t *ob = sensors_[idx].obis.bytes;  // OBIS groups A.B.C.D.E.F
       if (values[i].has_value()) {
         sensors_[idx].last_value = values[i];
+        sensors_[idx].expected_dtype = values[i].dtype;
         ESP_LOGD(TAG, "  sensor[%u] OBIS %u.%u.%u.%u.%u.%u value OK (dlms_type=0x%02X, %u B)",
                  idx, ob[0], ob[1], ob[2], ob[3], ob[4], ob[5],
                  values[i].dtype, values[i].raw_len);
@@ -1373,6 +1388,10 @@ bool NartisRfMeterComponent::handle_get_response_() {
 
 void NartisRfMeterComponent::skip_current_batch_() {
   if (session_primed_) {
+    // Firmware port: a wrongly learned type (e.g. from a misrouted first reply)
+    // would block this batch forever; relearn on the next cycle instead.
+    for (uint8_t i = 0; i < batch_count_ && (batch_start_idx_ + i) < sensors_.size(); i++)
+      sensors_[batch_start_idx_ + i].expected_dtype = 0;
     batch_start_idx_ += batch_count_;  // skip this user batch
   }
 }
