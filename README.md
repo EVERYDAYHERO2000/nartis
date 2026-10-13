@@ -211,6 +211,34 @@ rest:
 
 Остальные величины подключаются так же, по OBIS-коду из таблицы выше.
 
+## Корпус
+
+В папке [`enclosure/`](enclosure) лежит корпус для 3D-печати под настенный монтаж.
+
+![Корпус](enclosure/preview.png)
+
+- Габариты закрытого корпуса 40 × 44 × 21 мм, плюс два ушка под шурупы по 10 мм с боков.
+- Крепится дном к стене, разъёмом SMA вверх. Антенна выходит через верхний торец, кабель USB-C через нижний.
+- Под SMA сделан U-образный паз, его закрывает язычок крышки. Модуль кладётся в корпус сверху.
+- Платы стоят на опорах и держатся угловыми направляющими, крышка закрывается на защёлку.
+
+**Файлы для печати:**
+- [`nartis_print_plate.3mf`](enclosure/nartis_print_plate.3mf) — обе детали на одном столе как два отдельных объекта, удобнее всего для слайсера;
+- [`nartis_print_plate.stl`](enclosure/nartis_print_plate.stl) — то же одним STL;
+- [`nartis_print_plate.step`](enclosure/nartis_print_plate.step) — для доработки в CAD.
+
+![Стол печати](enclosure/print_plate_preview.png)
+
+**Печать:** PLA или PETG, слой 0.2 мм, 3 периметра, без поддержек. Корпус печатается открытой стороной вверх, крышка — плоской стороной на столе. Нужно около 18 г пластика. Для крепления — шурупы 3.5–4 мм с потайной головкой.
+
+**Размеры** модели взяты из даташитов плат, пробная печать не проводилась. Перед печатью сверьте свои платы. Все размеры — параметры в начале [`enclosure/enclosure.py`](enclosure/enclosure.py): плата E07 30 × 15 мм (`E07_L`, `E07_W`), положение оси SMA (`SMA_Y`, `SMA_Z`), ESP32-C3 22.5 × 18 мм с вылетом USB-C ~1.5 мм (`ESP_USB_OVERHANG`), внутренняя высота 17 мм под колодку с припаянными проводами (`INNER_H`). После правки пересоберите модель:
+
+```bash
+pip install cadquery
+cd enclosure
+python enclosure.py
+```
+
 ## Особенности
 
 - **Мощность Wi-Fi передатчика 8.5 dBm.** На платах ESP32-C3 Super Mini при мощности по умолчанию (~20 dBm) сигнал искажается: устройство видит сети, но роутер не принимает его кадры, а точку доступа не видно. Значение задаётся константой `TX_POWER_QDBM` в [`firmware/main/net.c`](firmware/main/net.c). На других платах её можно увеличить.
@@ -236,6 +264,7 @@ firmware/                    проект ESP-IDF
   sdkconfig.defaults
 web/                         веб-интерфейс (встраивается в прошивку)
 custom_components/nartis/    интеграция для Home Assistant
+enclosure/                   корпус для 3D-печати (скрипт CadQuery, 3MF/STL/STEP)
 hacs.json                    описание для установки через HACS
 ```
 
@@ -245,6 +274,7 @@ hacs.json                    описание для установки чере
 - **[FerrumLogic/esphome-nartis-rf-meter-cc1101](https://github.com/FerrumLogic/esphome-nartis-rf-meter-cc1101)**: порт этого компонента на радиомодуль CC1101. Его код перенесён в [`firmware/components/nartis_rf/src`](firmware/components/nartis_rf/src) почти без изменений (версия указана в `UPSTREAM.txt`). Добавлены только прослойка вместо ESPHome, метод `is_paired()` и проверка типов значений в ответах счётчика. Последняя не даёт записать ответ одной пачки показаний в сенсоры другой (подробнее в разделе «Особенности»).
 - **Драйвер CC1101 на базе библиотеки panStamp** (panStamp, Tyler Sommer, Daniel Berenguer; LGPL-3.0) в составе компонента FerrumLogic: [`cc1101_vendored.c`](firmware/components/nartis_rf/src/cc1101_vendored.c).
 - **[ESP-IDF](https://github.com/espressif/esp-idf)** (Espressif, Apache-2.0).
+- **[CadQuery](https://github.com/CadQuery/cadquery)** (Apache-2.0): построение модели корпуса.
 - **[latonita/esphome-nartis-rf-2-meter](https://github.com/latonita/esphome-nartis-rf-2-meter)**: решение для счётчиков с RF433-2 / Д101-2, которые этот проект не поддерживает.
 
 ## Лицензия
