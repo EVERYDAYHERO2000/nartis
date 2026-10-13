@@ -589,6 +589,16 @@ void NartisRfMeterComponent::handle_state_() {
           }
           rx_parse_retries_ = 0;
           set_state_(State::READ_REQUEST_TX);
+        } else if (raw_type == RX_TYPE_DATA) {
+          // Firmware port: after an interrupted cycle the meter keeps answering
+          // every beacon with its still-pending data reply (0x43) instead of
+          // 0x40, so re-sending the beacon never ends. The close path already
+          // treats this 0x43 re-delivery as the final ack; do the same here and
+          // move on - stale data is filtered by the replay and type guards.
+          lock_channel_();
+          ESP_LOGI(TAG, "Beacon response: meter re-delivered pending data (0x43) - treating as ack");
+          rx_parse_retries_ = 0;
+          set_state_(State::READ_REQUEST_TX);
         } else if (rx_parse_retries_ < MAX_RX_PARSE_RETRIES_) {
           rx_parse_retries_++;
           if (payload_len >= 0) {
