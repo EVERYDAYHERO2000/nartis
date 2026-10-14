@@ -1,12 +1,14 @@
 {
   "domain": "nartis",
   "name": "Nartis RF Meter",
-  "codeowners": ["@EVERYDAYHERO2000"],
+  "codeowners": [
+    "@EVERYDAYHERO2000"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/EVERYDAYHERO2000/nartis",
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/EVERYDAYHERO2000/nartis/issues",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

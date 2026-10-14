@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from math import isfinite
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +19,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfApparentPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -78,6 +80,17 @@ OBIS_SENSORS: dict[str, SensorEntityDescription] = {
     ),
 }
 
+PHASE_POWER_SENSORS = tuple(
+    SensorEntityDescription(
+        key=f"apparent_power_l{phase}", translation_key=f"apparent_power_l{phase}",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        suggested_display_precision=0,
+    )
+    for phase in (1, 2, 3)
+)
+
 LAST_READING = SensorEntityDescription(
     key="last_reading", translation_key="last_reading",
     device_class=SensorDeviceClass.TIMESTAMP, entity_category=EntityCategory.DIAGNOSTIC,
@@ -107,7 +120,33 @@ async def async_setup_entry(
             entities.append(NartisGenericSensor(coordinator, obis, value.label, value.unit))
     entities.append(NartisLastReadingSensor(coordinator))
     entities.append(NartisRssiSensor(coordinator))
+    for phase, description in enumerate(PHASE_POWER_SENSORS, start=1):
+        entities.append(NartisPhasePowerSensor(coordinator, phase, description))
     async_add_entities(entities)
+
+
+class NartisPhasePowerSensor(NartisEntity, SensorEntity):
+    """Calculated apparent power U × I for one phase, in VA."""
+
+    def __init__(self, coordinator: NartisCoordinator, phase: int, description: SensorEntityDescription) -> None:
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+        voltage_code = 32 + (phase - 1) * 20
+        self._voltage_obis = f"1.0.{voltage_code}.7.0.255"
+        self._current_obis = f"1.0.{voltage_code - 1}.7.0.255"
+
+    @property
+    def native_value(self) -> float | None:
+        voltage = self.coordinator.data.values.get(self._voltage_obis)
+        current = self.coordinator.data.values.get(self._current_obis)
+        if voltage is None or current is None or voltage.stale or current.stale:
+            return None
+        if voltage.value is None or current.value is None:
+            return None
+        if not isfinite(voltage.value) or not isfinite(current.value):
+            return None
+        power = voltage.value * current.value
+        return power if isfinite(power) else None
 
 
 class NartisObisSensor(NartisEntity, SensorEntity):

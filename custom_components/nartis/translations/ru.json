@@ -73,6 +73,15 @@
       },
       "wifi_rssi": {
         "name": "Сигнал Wi-Fi"
+      },
+      "apparent_power_l1": {
+        "name": "Расчётная мощность L1"
+      },
+      "apparent_power_l2": {
+        "name": "Расчётная мощность L2"
+      },
+      "apparent_power_l3": {
+        "name": "Расчётная мощность L3"
       }
     },
     "binary_sensor": {

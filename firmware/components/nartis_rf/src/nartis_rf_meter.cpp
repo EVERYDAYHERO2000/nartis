@@ -1398,10 +1398,13 @@ bool NartisRfMeterComponent::handle_get_response_() {
 
 void NartisRfMeterComponent::skip_current_batch_() {
   if (session_primed_) {
-    // Firmware port: a wrongly learned type (e.g. from a misrouted first reply)
-    // would block this batch forever; relearn on the next cycle instead.
-    for (uint8_t i = 0; i < batch_count_ && (batch_start_idx_ + i) < sensors_.size(); i++)
-      sensors_[batch_start_idx_ + i].expected_dtype = 0;
+    // Relearn inferred types after a failed batch, but preserve explicit types.
+    // Clearing firmware DEFS types lets a delayed voltage batch be accepted as
+    // energy/tariffs on the next cycle and then learned as the new schema.
+    for (uint8_t i = 0; i < batch_count_ && (batch_start_idx_ + i) < sensors_.size(); i++) {
+      auto &entry = sensors_[batch_start_idx_ + i];
+      if (!entry.expected_dtype_fixed) entry.expected_dtype = 0;
+    }
     batch_start_idx_ += batch_count_;  // skip this user batch
   }
 }

@@ -23,6 +23,7 @@ class NartisValue:
     unit: str
     value: float | None
     decimals: int | None = None
+    stale: bool = False
 
 
 @dataclass
@@ -89,6 +90,7 @@ class NartisApi:
                 unit=item.get("unit") or "",
                 value=float(raw) if isinstance(raw, (int, float)) else None,
                 decimals=item.get("decimals"),
+                stale=bool(item.get("stale", False)),
             )
 
         age = readings.get("age")

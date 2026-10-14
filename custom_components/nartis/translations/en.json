@@ -73,6 +73,15 @@
       },
       "wifi_rssi": {
         "name": "Wi-Fi signal"
+      },
+      "apparent_power_l1": {
+        "name": "Calculated apparent power L1"
+      },
+      "apparent_power_l2": {
+        "name": "Calculated apparent power L2"
+      },
+      "apparent_power_l3": {
+        "name": "Calculated apparent power L3"
       }
     },
     "binary_sensor": {

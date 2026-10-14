@@ -27,6 +27,23 @@ function fmt(v, d) {
   return v.toFixed(d ?? 1);
 }
 
+function phasePowerValues(values) {
+  const byObis = new Map(values.map((v) => [v.obis, v]));
+  return [32, 52, 72].map((voltageCode, index) => {
+    const voltage = byObis.get(`1.0.${voltageCode}.7.0.255`);
+    const current = byObis.get(`1.0.${voltageCode - 1}.7.0.255`);
+    const valid = Number.isFinite(voltage?.value) && Number.isFinite(current?.value)
+      && !voltage.stale && !current.stale;
+    const power = valid ? voltage.value * current.value : null;
+    return {
+      label: `Расчётная мощность L${index + 1}`,
+      unit: "В·А", decimals: 0,
+      value: Number.isFinite(power) ? power : null,
+      stale: !valid || !Number.isFinite(power),
+    };
+  });
+}
+
 async function loadReadings() {
   let d;
   try {
@@ -35,7 +52,8 @@ async function loadReadings() {
     $("#dot").className = "dot off";
     return;
   }
-  $("#dev").textContent = d.name || "nartis";
+  $("#dev").textContent = "НАРТИС";
+  $("#version").textContent = d.version ? `v${d.version}` : "";
   $("#dot").className = "dot " + (d.online ? "on" : "off");
   const parts = [];
   if (d.serial) parts.push(`№ ${d.serial}`);
@@ -45,7 +63,11 @@ async function loadReadings() {
 
   const grid = $("#grid");
   grid.innerHTML = "";
-  (d.values || []).forEach((m) => {
+  const values = d.values || [];
+  const priority = (m) => m.obis === "1.0.1.7.0.255" ? 0
+    : m.obis === "1.0.14.7.0.255" ? 1 : 2;
+  const orderedValues = [...values].sort((a, b) => priority(a) - priority(b));
+  [...orderedValues, ...phasePowerValues(values)].forEach((m) => {
     const el = document.createElement("div");
     el.className = "cell" + (m.stale ? " stale" : "");
     el.innerHTML =

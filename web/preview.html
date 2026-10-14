@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>НАРТИС</title>
+  <style>
+:root {
+  --bg: #0f1113; --card: #17191c; --line: #24282c; --fg: #e8eaed;
+  --muted: #868d96; --accent: #e0662a; --ok: #43b581; --bad: #d9534f;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; }
+
+nav {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+}
+.dev { font-weight: 600; letter-spacing: .02em; }
+.brand { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.version { font-size: 11px; font-weight: 400; color: var(--muted); }
+.spacer { flex: 1; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.on { background: var(--ok); }
+.dot.off { background: var(--bad); }
+.tab {
+  background: none; border: none; color: var(--muted); font: inherit;
+  cursor: pointer; padding: 4px 2px; font-size: 14px;
+}
+.tab.active { color: var(--fg); }
+
+main { max-width: 760px; margin: 0 auto; padding: 24px 20px; }
+.view { display: none; }
+.view.active { display: block; }
+
+.meta { color: var(--muted); font-size: 13px; margin-bottom: 18px; min-height: 18px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.cell {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 16px 14px;
+}
+.cell .v { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.cell .u { color: var(--muted); font-size: 13px; margin-left: 4px; font-weight: 400; }
+.cell .l { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.cell.stale .v { color: var(--muted); }
+
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+input, select {
+  background: #0f1113; border: 1px solid var(--line); color: var(--fg);
+  border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 14px; width: 100%;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+.field { display: flex; gap: 8px; }
+.field select { flex: 1; }
+.icon {
+  background: #0f1113; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 8px; padding: 0 12px; cursor: pointer; font-size: 16px;
+}
+button.primary {
+  background: var(--accent); border: none; color: #130a04; font: inherit;
+  font-weight: 600; font-size: 14px; border-radius: 8px; padding: 11px; cursor: pointer;
+}
+button.primary:active { opacity: .85; }
+.msg { font-size: 13px; color: var(--muted); min-height: 16px; }
+.msg.ok { color: var(--ok); }
+.msg.bad { color: var(--bad); }
+
+.api .row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.api .row span { color: var(--muted); }
+.api code { font-family: ui-monospace, monospace; font-size: 12px; color: var(--fg); }
+
+</style>
+</head>
+<body>
+  <nav>
+    <span class="brand"><span id="dev" class="dev">НАРТИС</span><span id="version" class="version"></span></span>
+    <span class="spacer"></span>
+    <span id="dot" class="dot"></span>
+    <button data-view="readings" class="tab active">Показания</button>
+    <button data-view="settings" class="tab">Настройки</button>
+  </nav>
+
+  <main>
+    <section id="readings" class="view active">
+      <div id="meta" class="meta"></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="settings" class="view">
+      <form id="wifiForm" class="card">
+        <div class="field">
+          <select id="ssid"></select>
+          <button type="button" id="rescan" class="icon" title="Обновить">↻</button>
+        </div>
+        <input id="pass" type="password" placeholder="Пароль Wi-Fi" autocomplete="off" />
+        <button type="submit" class="primary">Подключить</button>
+        <div id="wifiMsg" class="msg"></div>
+      </form>
+
+      <form id="cfgForm" class="card">
+        <input id="serial" inputmode="numeric" maxlength="12" placeholder="Серийный номер счётчика" />
+        <select id="channel">
+          <option value="auto">Канал: авто</option>
+          <option value="0">CH0 · 433.82</option>
+          <option value="1">CH1 · 433.30</option>
+          <option value="2">CH2 · 434.26</option>
+          <option value="3">CH3 · 434.70</option>
+        </select>
+        <select id="interval">
+          <option value="300">Опрос: 5 мин</option>
+          <option value="600">Опрос: 10 мин</option>
+          <option value="1800">Опрос: 30 мин</option>
+        </select>
+        <button type="submit" class="primary">Сохранить</button>
+        <div id="cfgMsg" class="msg"></div>
+      </form>
+
+      <div class="card api">
+        <div class="row"><span>API</span><code id="apiUrl">/api/readings</code></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+
+
+const mockReadings = {"name": "nartis", "online": true, "paired": true, "serial": "000000000000", "age": 42, "values": [{"label": "Мощность", "obis": "1.0.1.7.0.255", "unit": "Вт", "decimals": 0, "value": 2249, "stale": false}, {"label": "Напряжение L1", "obis": "1.0.32.7.0.255", "unit": "В", "decimals": 1, "value": 215.1, "stale": false}, {"label": "Напряжение L2", "obis": "1.0.52.7.0.255", "unit": "В", "decimals": 1, "value": 225.6, "stale": false}, {"label": "Напряжение L3", "obis": "1.0.72.7.0.255", "unit": "В", "decimals": 1, "value": 217.7, "stale": false}, {"label": "Ток L1", "obis": "1.0.31.7.0.255", "unit": "А", "decimals": 2, "value": 2.224, "stale": false}, {"label": "Ток L2", "obis": "1.0.51.7.0.255", "unit": "А", "decimals": 2, "value": 4.456, "stale": false}, {"label": "Ток L3", "obis": "1.0.71.7.0.255", "unit": "А", "decimals": 2, "value": 5.534, "stale": false}, {"label": "Энергия", "obis": "1.0.1.8.0.255", "unit": "кВт·ч", "decimals": 1, "value": 48020.874, "stale": false}, {"label": "Тариф 1", "obis": "1.0.1.8.1.255", "unit": "кВт·ч", "decimals": 1, "value": 33814.858, "stale": false}, {"label": "Тариф 2", "obis": "1.0.1.8.2.255", "unit": "кВт·ч", "decimals": 1, "value": 14206.015, "stale": false}, {"label": "Частота", "obis": "1.0.14.7.0.255", "unit": "Гц", "decimals": 2, "value": 50.02, "stale": false}], "version": "1.1.0"};
+
+// Local demo only: all API requests are handled in memory.
+window.fetch = async (url, options = {}) => {
+  let data;
+  if (options.method === "POST") data = {ok: true};
+  else if (url === "/api/readings") data = mockReadings;
+  else if (url === "/api/config") data = {meter_serial: mockReadings.serial, channel: "auto", update_interval: 600, wifi_ssid: "Home Wi-Fi"};
+  else if (url === "/api/wifi/scan") data = {networks: [{ssid: "Home Wi-Fi", secure: true}, {ssid: "Guest Wi-Fi", secure: true}]};
+  else return {ok: false, status: 404};
+  return {ok: true, status: 200, json: async () => structuredClone(data)};
+};
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+function view(name) {
+  $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.view === name));
+  $$(".view").forEach((v) => v.classList.toggle("active", v.id === name));
+  if (name === "settings") loadConfig();
+}
+$$(".tab").forEach((t) => (t.onclick = () => view(t.dataset.view)));
+
+async function getJSON(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+// ---- readings ----
+function ago(sec) {
+  if (sec == null) return "нет данных";
+  if (sec < 60) return `${sec} с назад`;
+  if (sec < 3600) return `${Math.floor(sec / 60)} мин назад`;
+  return `${Math.floor(sec / 3600)} ч назад`;
+}
+
+function fmt(v, d) {
+  if (v == null) return "—";
+  return v.toFixed(d ?? 1);
+}
+
+function phasePowerValues(values) {
+  const byObis = new Map(values.map((v) => [v.obis, v]));
+  return [32, 52, 72].map((voltageCode, index) => {
+    const voltage = byObis.get(`1.0.${voltageCode}.7.0.255`);
+    const current = byObis.get(`1.0.${voltageCode - 1}.7.0.255`);
+    const valid = Number.isFinite(voltage?.value) && Number.isFinite(current?.value)
+      && !voltage.stale && !current.stale;
+    const power = valid ? voltage.value * current.value : null;
+    return {
+      label: `Расчётная мощность L${index + 1}`,
+      unit: "В·А", decimals: 0,
+      value: Number.isFinite(power) ? power : null,
+      stale: !valid || !Number.isFinite(power),
+    };
+  });
+}
+
+async function loadReadings() {
+  let d;
+  try {
+    d = await getJSON("/api/readings");
+  } catch {
+    $("#dot").className = "dot off";
+    return;
+  }
+  $("#dev").textContent = "НАРТИС";
+  $("#version").textContent = d.version ? `v${d.version}` : "";
+  $("#dot").className = "dot " + (d.online ? "on" : "off");
+  const parts = [];
+  if (d.serial) parts.push(`№ ${d.serial}`);
+  parts.push(d.paired ? "сопряжён" : "не сопряжён");
+  parts.push(ago(d.age));
+  $("#meta").textContent = parts.join("  ·  ");
+
+  const grid = $("#grid");
+  grid.innerHTML = "";
+  const values = d.values || [];
+  const priority = (m) => m.obis === "1.0.1.7.0.255" ? 0
+    : m.obis === "1.0.14.7.0.255" ? 1 : 2;
+  const orderedValues = [...values].sort((a, b) => priority(a) - priority(b));
+  [...orderedValues, ...phasePowerValues(values)].forEach((m) => {
+    const el = document.createElement("div");
+    el.className = "cell" + (m.stale ? " stale" : "");
+    el.innerHTML =
+      `<div><span class="v">${fmt(m.value, m.decimals)}</span><span class="u">${m.unit || ""}</span></div>` +
+      `<div class="l">${m.label}</div>`;
+    grid.appendChild(el);
+  });
+}
+
+// ---- settings ----
+async function loadConfig() {
+  try {
+    const c = await getJSON("/api/config");
+    $("#serial").value = c.meter_serial || "";
+    $("#channel").value = c.channel ?? "auto";
+    $("#interval").value = String(c.update_interval || 600);
+    $("#apiUrl").textContent = (location.origin || "") + "/api/readings";
+  } catch {}
+  scan();
+}
+
+async function scan() {
+  const sel = $("#ssid");
+  sel.innerHTML = "<option>поиск…</option>";
+  try {
+    const d = await getJSON("/api/wifi/scan");
+    sel.innerHTML = "";
+    (d.networks || []).forEach((n) => {
+      const o = document.createElement("option");
+      o.value = n.ssid;
+      o.textContent = n.ssid + (n.secure ? "" : "  (открытая)");
+      sel.appendChild(o);
+    });
+    if (!sel.children.length) sel.innerHTML = "<option value=''>сети не найдены</option>";
+  } catch {
+    sel.innerHTML = "<option value=''>ошибка поиска</option>";
+  }
+}
+$("#rescan").onclick = scan;
+
+$("#wifiForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const msg = $("#wifiMsg");
+  msg.className = "msg";
+  msg.textContent = "Подключение…";
+  try {
+    await getJSON("/api/wifi", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ssid: $("#ssid").value, password: $("#pass").value }),
+    });
+    msg.className = "msg ok";
+    msg.textContent = "Сохранено. Устройство переподключается.";
+  } catch {
+    msg.className = "msg bad";
+    msg.textContent = "Не удалось сохранить.";
+  }
+};
+
+$("#cfgForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const msg = $("#cfgMsg");
+  msg.className = "msg";
+  msg.textContent = "Сохранение…";
+  try {
+    await getJSON("/api/config", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        meter_serial: $("#serial").value,
+        channel: $("#channel").value,
+        update_interval: parseInt($("#interval").value, 10),
+      }),
+    });
+    msg.className = "msg ok";
+    msg.textContent = "Сохранено. Устройство перезагружается.";
+  } catch {
+    msg.className = "msg bad";
+    msg.textContent = "Ошибка сохранения.";
+  }
+};
+
+loadReadings();
+setInterval(loadReadings, 5000);
+
+</script>
+</body>
+</html>

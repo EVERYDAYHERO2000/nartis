@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_system.h"
+#include "esp_app_desc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "cJSON.h"
@@ -71,6 +72,7 @@ static esp_err_t h_readings(httpd_req_t* r) {
 
     cJSON* root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "name", "nartis");
+    cJSON_AddStringToObject(root, "version", esp_app_get_description()->version);
     cJSON_AddBoolToObject(root, "online", net_sta_connected() || net_ap_active());
     cJSON_AddBoolToObject(root, "paired", stp->paired);
     cJSON_AddStringToObject(root, "serial", s->meter_serial);
