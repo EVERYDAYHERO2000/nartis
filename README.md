@@ -1,3 +1,5 @@
+<img src="docs/images/icon.svg" alt="" width="96" align="right">
+
 # Nartis RF: чтение показаний счётчика Нартис по радиоканалу 433 МГц
 
 Прошивка для **ESP32-C3** с радиомодулем **CC1101**. Устройство сопрягается со счётчиком электроэнергии **Нартис И100 / И300** по его радиоинтерфейсу RF433, то есть работает так же, как выносной дисплей **Нартис Д101**. Затем оно регулярно опрашивает счётчик по протоколу DLMS/COSEM и отдаёт показания:
@@ -159,6 +161,8 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor
 
 В репозитории есть пользовательская интеграция [`custom_components/nartis`](custom_components/nartis). Она добавляет устройство «Нартис» со всеми сенсорами, настраивается через интерфейс Home Assistant и опрашивает локальный API устройства без облака и MQTT. Проверена на Home Assistant 2026.10.
 
+У интеграции своя иконка (папка [`custom_components/nartis/brand`](custom_components/nartis/brand), есть светлый и тёмный варианты), Home Assistant берёт её прямо из интеграции. Проверено на Home Assistant 2026.10.
+
 ### Установка
 
 **Через HACS:** HACS → меню ⋮ → «Пользовательские репозитории» → адрес `https://github.com/EVERYDAYHERO2000/nartis`, категория «Интеграция» → установить **Nartis RF Meter** → перезапустить Home Assistant.
@@ -267,7 +271,7 @@ firmware/                    проект ESP-IDF
   partitions.csv
   sdkconfig.defaults
 web/                         веб-интерфейс (встраивается в прошивку)
-custom_components/nartis/    интеграция для Home Assistant
+custom_components/nartis/    интеграция для Home Assistant (иконка в brand/)
 enclosure/                   корпус для 3D-печати (скрипт CadQuery, 3MF/STL/STEP)
 hacs.json                    описание для установки через HACS
 ```
