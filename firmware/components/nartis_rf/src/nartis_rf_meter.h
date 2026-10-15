@@ -305,7 +305,10 @@ class NartisRfMeterComponent : public esphome::PollingComponent {
   static constexpr uint32_t RX_TIMEOUT_MS_DEFAULT_ = 3000;
   // Raised from 3: a batch was being skipped because the meter answered
   // 0x40 ("no data") to every data-request beacon while our RX was off.
-  static constexpr uint8_t MAX_RETRIES_ = 6;
+  // Firmware port: raised from 6 to 10 - on a Nartis I300 the first batch's
+  // data arrived ~0.5 s after the 6th poll, so the batch was skipped and its
+  // late reply then had to be rejected by the type guard.
+  static constexpr uint8_t MAX_RETRIES_ = 10;
   // Steady-state GET reply wait. When the meter is listening it answers a
   // get-request in ~190 ms; a long wait only burns time when our request lands
   // in the meter's post-TX deaf window (it ignores frames that arrive too soon
